@@ -58,5 +58,4 @@ jobs:
           TIMEZONE: Europe/Berlin
           REQUEST_DELAY_SECONDS: "1.5"
           MAX_RESULTS_PER_SOURCE: "50"
-          PYTHONPATH: .
-        run: python scripts/run_digest.py
+        run: python run_digest.py
