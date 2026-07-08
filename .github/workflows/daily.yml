@@ -1,0 +1,44 @@
+name: Daily Job Digest
+
+on:
+  schedule:
+    # 07:00 UTC ≈ 09:00 Berlin (летом). Зимой будет 08:00 Berlin.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore vacancies database
+        uses: actions/cache@v4
+        with:
+          path: data/vacancies.db
+          key: vacancies-db-${{ github.ref }}
+          restore-keys: |
+            vacancies-db-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run daily digest
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SEARCH_KEYWORDS: ${{ vars.SEARCH_KEYWORDS || 'python,developer,software' }}
+          SEARCH_LOCATION: ${{ vars.SEARCH_LOCATION }}
+          ENABLED_SOURCES: ${{ vars.ENABLED_SOURCES || 'arbeitsagentur,indeed,stepstone' }}
+          DATABASE_PATH: data/vacancies.db
+          TIMEZONE: Europe/Berlin
+          REQUEST_DELAY_SECONDS: "1.5"
+          MAX_RESULTS_PER_SOURCE: "50"
+        run: python scripts/run_digest.py

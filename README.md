@@ -7,10 +7,80 @@
 - Поиск по ключевым словам и опциональной локации
 - Дедупликация через SQLite
 - Ежедневная рассылка в заданное время
-- Команды `/start`, `/search`, `/status`
+- **Бесплатный хостинг через GitHub Actions** (без сервера)
+- Команды `/start`, `/search`, `/status` (только при локальном запуске `main.py`)
 - Расширяемая архитектура scrapers для новых сайтов
 
-## Быстрый старт
+## Бесплатный запуск через GitHub Actions (рекомендуется)
+
+Не нужен сервер, карта или включённый ПК. GitHub раз в день запускает поиск и шлёт результат в Telegram.
+
+### 1. Создайте Telegram-бота
+
+1. Откройте [@BotFather](https://t.me/BotFather)
+2. `/newbot` → скопируйте токен
+
+### 2. Узнайте Chat ID
+
+1. Напишите боту любое сообщение
+2. Откройте: `https://api.telegram.org/bot<ТОКЕН>/getUpdates`
+3. Найдите `"chat":{"id":123456789}`
+
+### 3. Загрузите код на GitHub
+
+```bash
+git add .
+git commit -m "Add GitHub Actions daily digest"
+git push -u origin main
+```
+
+### 4. Настройте секреты и переменные
+
+В репозитории: **Settings → Secrets and variables → Actions**
+
+**Secrets** (обязательные):
+
+| Имя | Значение |
+|-----|----------|
+| `TELEGRAM_BOT_TOKEN` | токен от BotFather |
+| `TELEGRAM_CHAT_ID` | ваш chat id |
+
+**Variables** (вкладка Variables, опционально):
+
+| Имя | Пример |
+|-----|--------|
+| `SEARCH_KEYWORDS` | `python,developer,software` |
+| `SEARCH_LOCATION` | `Berlin` |
+| `ENABLED_SOURCES` | `arbeitsagentur,indeed,stepstone` |
+
+Если Variables не заданы, используются значения по умолчанию из `config.py`.
+
+### 5. Запустите вручную для проверки
+
+**Actions → Daily Job Digest → Run workflow**
+
+Через 1–2 минуты в Telegram должен прийти дайджест.
+
+### 6. Расписание
+
+По умолчанию: **каждый день в 07:00 UTC** (≈ 09:00 Berlin летом).
+
+Изменить время: отредактируйте `cron` в [`.github/workflows/daily.yml`](.github/workflows/daily.yml).  
+[Cron calculator](https://crontab.guru/) — время указывается в **UTC**.
+
+### Как хранятся обработанные вакансии
+
+SQLite-база кэшируется между запусками через GitHub Actions Cache — дубликаты не приходят повторно.
+
+### Ограничения GitHub Actions
+
+- Нет команд `/search` и `/status` в Telegram (бот не работает постоянно)
+- Рассылка только по расписанию (+ ручной запуск в Actions)
+- Для интерактивного бота запускайте `python main.py` локально
+
+---
+
+## Локальный запуск (с командами /search)
 
 ### 1. Создайте Telegram-бота
 
@@ -91,4 +161,5 @@ TGBot/
 
 - **Arbeitsagentur** использует публичный REST API и работает наиболее стабильно
 - **Indeed** и **StepStone** парсят HTML/JSON — при блокировке бот продолжит работу с остальными источниками
-- ПК должен быть включён в момент рассылки (или используйте VPS + Docker)
+- **GitHub Actions** — бесплатно для личного репозитория
+- Локальный `main.py` нужен только если хотите команды `/search` в Telegram
