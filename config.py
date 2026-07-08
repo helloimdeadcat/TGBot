@@ -33,6 +33,13 @@ class Settings(BaseSettings):
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 
+    @field_validator("search_location", mode="before")
+    @classmethod
+    def empty_location_to_none(cls, value: str | None) -> str | None:
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None
+        return value.strip()
+
 
 @lru_cache
 def get_settings() -> Settings:

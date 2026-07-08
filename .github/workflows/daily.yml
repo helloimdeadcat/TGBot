@@ -13,6 +13,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare data directory
+        run: mkdir -p data
+
       - name: Restore vacancies database
         uses: actions/cache@v4
         with:
@@ -30,6 +33,20 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Check required secrets
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "::error::Secret TELEGRAM_BOT_TOKEN is not set"
+            exit 1
+          fi
+          if [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "::error::Secret TELEGRAM_CHAT_ID is not set"
+            exit 1
+          fi
+
       - name: Run daily digest
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -41,4 +58,5 @@ jobs:
           TIMEZONE: Europe/Berlin
           REQUEST_DELAY_SECONDS: "1.5"
           MAX_RESULTS_PER_SOURCE: "50"
+          PYTHONPATH: .
         run: python scripts/run_digest.py
